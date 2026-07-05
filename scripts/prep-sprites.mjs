@@ -29,6 +29,12 @@ const JOBS = [
   { src: 'sissel_s', h: 18 },
   { src: 'broker_s', h: 24 },
   { src: 'dunhill_s', h: 26 },
+  { src: 'player_s_c', h: 26 }, { src: 'player_n_c', h: 26 },
+  { src: 'player_e_c', h: 26 }, { src: 'player_w_c', h: 26 },
+  { src: 'atk_s_a', h: 27 }, { src: 'atk_s_b', h: 27 },
+  { src: 'atk_n_a', h: 27 }, { src: 'atk_n_b', h: 27 },
+  { src: 'atk_e_a', h: 27 }, { src: 'atk_e_b', h: 27 },
+  { src: 'atk_w_a', h: 27 }, { src: 'atk_w_b', h: 27 },
 ];
 
 await mkdir('public/sprites', { recursive: true });

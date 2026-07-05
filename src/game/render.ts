@@ -591,8 +591,15 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, lvl: Level) {
 
   const bob = Math.abs(Math.sin(p.walkPhase)) * 1.3;
   const dir = playerDir(p);
-  const stride = p.moving && Math.floor(p.walkPhase / (Math.PI / 2)) % 2 === 0;
-  const img = sprites.get(stride ? `player_${dir}_b` : `player_${dir}`) ?? sprites.get(`player_${dir}`);
+  // frame selection: attack poses > walk cycle (base→b→base→c) > idle
+  let frame = `player_${dir}`;
+  if (p.attack) {
+    frame = p.attack.phase === 'windup' ? `atk_${dir}_a` : `atk_${dir}_b`;
+  } else if (p.moving) {
+    const step = Math.floor(p.walkPhase / (Math.PI / 2)) % 4;
+    frame = step === 1 ? `player_${dir}_b` : step === 3 ? `player_${dir}_c` : `player_${dir}`;
+  }
+  const img = sprites.get(frame) ?? sprites.get(`player_${dir}`);
   if (img) {
     drawSprite(ctx, img, x, y - bob, p.flashT > 0);
   } else {
@@ -605,54 +612,35 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, lvl: Level) {
     ctx.fillRect(x - 4.5, y - 19, 9, 3);
   }
 
-  // weapon toward aim (swings during attack)
-  let ang = p.aim;
-  if (p.attack) {
+  // crescent slash VFX — the weapon lives in the sprite's hands now
+  if (p.attack && (p.attack.phase === 'active' || (p.attack.phase === 'recover' && p.attack.t < 0.08))) {
     const a = p.attack;
-    const sweep = a.swing === 0 ? 1 : -1;
-    if (a.phase === 'windup') ang = a.dir - sweep * 1.2;
-    else if (a.phase === 'active') ang = a.dir + sweep * (a.t / PLAYER.attack.active - 0.5) * 2.2;
-    else ang = a.dir + sweep * 1.1;
-  }
-  // the drawn weapon, by style
-  const style = p.form.style;
-  const len = style === 'greatsword' ? 24 : style === 'longpick' ? 22 : style === 'rapier' ? 19 : 15;
-  if (style === 'greatsword') {
-    // the gem grows a blade around the blade
-    ctx.strokeStyle = 'rgba(212, 49, 72, 0.35)';
-    ctx.lineWidth = 6;
+    const c = a.cfg;
+    const t = a.phase === 'active' ? a.t / c.active : 1;
+    const fade = a.phase === 'recover' ? 1 - a.t / 0.08 : 1;
+    const SLASH: Record<string, [string, string]> = {
+      pick: ['rgba(240, 230, 208,', 'rgba(240, 230, 208,'],
+      longpick: ['rgba(232, 196, 130,', 'rgba(240, 230, 208,'],
+      rapier: ['rgba(216, 232, 240,', 'rgba(255, 255, 255,'],
+      greatsword: ['rgba(212, 49, 72,', 'rgba(240, 120, 140,'],
+    };
+    const [fill, edge] = a.bonus > 1 ? SLASH.greatsword : SLASH[c.style];
+    const sweep = Math.min(1, t * 1.15);
+    const a1 = a.dir - c.arc / 2 + c.arc * sweep;
+    const a0 = a1 - Math.min(c.arc * 0.75, 1.5);
+    const rO = c.range - 1;
+    const rI = c.range * 0.38;
     ctx.beginPath();
-    ctx.moveTo(x + Math.cos(ang) * 4, y - 8 + Math.sin(ang) * 4);
-    ctx.lineTo(x + Math.cos(ang) * len, y - 8 + Math.sin(ang) * len);
-    ctx.stroke();
-    ctx.strokeStyle = '#d88a96';
-    ctx.lineWidth = 2.5;
-  } else if (style === 'rapier') {
-    ctx.strokeStyle = '#c9c0b4';
-    ctx.lineWidth = 1.2;
-  } else {
-    ctx.strokeStyle = style === 'longpick' ? '#b0a284' : '#9a8f7a';
-    ctx.lineWidth = style === 'longpick' ? 2.5 : 2;
-  }
-  ctx.beginPath();
-  ctx.moveTo(x + Math.cos(ang) * 3, y - 8 + Math.sin(ang) * 3);
-  ctx.lineTo(x + Math.cos(ang) * len, y - 8 + Math.sin(ang) * len);
-  ctx.stroke();
-  if (style === 'longpick') {
+    ctx.arc(x, y - 6, rO, a0, a1);
+    ctx.arc(x, y - 6, rI, a1, a0, true);
+    ctx.closePath();
+    ctx.fillStyle = `${fill} ${0.34 * fade})`;
+    ctx.fill();
+    // bright leading edge
+    ctx.strokeStyle = `${edge} ${0.85 * fade})`;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(x + Math.cos(ang) * 22 + Math.cos(ang + 1.9) * 5, y - 8 + Math.sin(ang) * 22 + Math.sin(ang + 1.9) * 5);
-    ctx.lineTo(x + Math.cos(ang) * 22, y - 8 + Math.sin(ang) * 22);
-    ctx.lineTo(x + Math.cos(ang) * 22 + Math.cos(ang - 1.9) * 5, y - 8 + Math.sin(ang) * 22 + Math.sin(ang - 1.9) * 5);
-    ctx.stroke();
-  }
-
-  // attack arc flash during active frames
-  if (p.attack?.phase === 'active') {
-    const c = p.attack.cfg;
-    ctx.strokeStyle = p.attack.bonus > 1 ? 'rgba(212, 49, 72, 0.85)' : 'rgba(240, 230, 208, 0.7)';
-    ctx.lineWidth = p.attack.bonus > 1 ? 3.5 : 2.5;
-    ctx.beginPath();
-    ctx.arc(x, y - 6, c.range - 4, p.attack.dir - c.arc / 2.4, p.attack.dir + c.arc / 2.4);
+    ctx.arc(x, y - 6, (rO + rI) / 2, a1 - 0.25, a1);
     ctx.stroke();
   }
 

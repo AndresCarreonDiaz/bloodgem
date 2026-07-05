@@ -201,11 +201,11 @@ export class Player implements Entity {
       } else {
         this.updateAttack(dt, input);
       }
-    } else if (input.consume('transform', PLAYER.inputBuffer)) {
+    } else if (input.consume('transform', 0.3)) {
       this.formB = !this.formB;
       this.transformed = true;
       this.transformLockT = PLAYER.transformLock;
-    } else if (input.consume('swap', PLAYER.inputBuffer)) {
+    } else if (input.consume('swap', 0.3)) {
       this.swapWeaponSet();
     } else if (this.stamina >= this.form.cost && input.consume('attack', PLAYER.inputBuffer)) {
       this.startSwing();

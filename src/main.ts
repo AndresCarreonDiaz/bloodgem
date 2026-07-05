@@ -43,6 +43,8 @@ sprites.load([
   'grist_s', 'maud_s', 'verne_s', 'sissel_s', 'broker_s', 'dunhill_s',
   'player_n', 'player_s', 'player_e', 'player_w',
   'player_n_b', 'player_s_b', 'player_e_b', 'player_w_b',
+  'player_n_c', 'player_s_c', 'player_e_c', 'player_w_c',
+  'atk_s_a', 'atk_s_b', 'atk_n_a', 'atk_n_b', 'atk_e_a', 'atk_e_b', 'atk_w_a', 'atk_w_b',
   'rabble_s', 'watchman_s', 'hound_s', 'brute_s', 'priest_s', 'husk_s', 'chorister_s',
   'mother_s', 'mother2_s', 'cassar_s',
 ]);
