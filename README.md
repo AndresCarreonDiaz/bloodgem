@@ -7,6 +7,10 @@ mining city that drilled too deep.*
 
 ## Play
 
+**▶ Play it now: https://andrescarreondiaz.github.io/bloodgem/**
+
+Or locally:
+
 ```bash
 npm install
 npm run dev        # → http://localhost:5173
