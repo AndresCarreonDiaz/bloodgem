@@ -64,9 +64,11 @@ Bloodborne got wrong), and death-to-retry under 2 seconds (Rubinite's lesson).
   themes built from composition plans (the final boss theme's phase change is
   a plan chunk boundary).
 - **Verification:** `scripts/dev-verify.mjs` drives the real game in headless
-  Chromium — 38 assertions covering the whole souls kit, both levels, all
-  three bosses, and the ending. `npm run build && npx vite preview --port 4199 &`
-  then `node scripts/dev-verify.mjs`.
+  Chromium — 62 assertions covering the whole souls kit, both levels, all
+  four bosses, NPCs, secrets, and the ending — plus `scripts/audit-paths.mjs`,
+  18 structural checks that BFS the collision model to prove every arena,
+  lamp, and secret is honestly reachable on foot.
+  `npm run build && npx vite preview --port 4199 &` then run both scripts.
 
 Design bible: `docs/GDD.md`. Build log: `docs/ROADMAP.md`.
 
