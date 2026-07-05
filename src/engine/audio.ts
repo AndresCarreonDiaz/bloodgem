@@ -18,7 +18,7 @@ export class AudioManager {
       names.map(async (n) => {
         if (this.buffers.has(n)) return;
         try {
-          const res = await fetch(`/audio/${n}.mp3`);
+          const res = await fetch(`audio/${n}.mp3`);
           const data = await res.arrayBuffer();
           this.buffers.set(n, await this.ctx!.decodeAudioData(data));
         } catch {

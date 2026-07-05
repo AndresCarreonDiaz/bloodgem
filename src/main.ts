@@ -46,7 +46,7 @@ sprites.load([
   'rabble_s', 'watchman_s', 'hound_s', 'brute_s', 'priest_s', 'husk_s', 'chorister_s',
   'mother_s', 'mother2_s', 'cassar_s',
 ]);
-sprites.load(['tex_cobble', 'tex_flagstone', 'tex_canal', 'tex_minerock', 'tex_planks', 'tex_minehead'], '/tiles/');
+sprites.load(['tex_cobble', 'tex_flagstone', 'tex_canal', 'tex_minerock', 'tex_planks', 'tex_minehead'], 'tiles/');
 
 function advanceTitle() {
   if (state === 'title') {
@@ -97,7 +97,7 @@ window.addEventListener('keydown', (e) => {
 canvas.addEventListener('mousedown', () => advanceTitle());
 
 const titleArt = new Image();
-titleArt.src = '/title.png';
+titleArt.src = 'title.png';
 
 const DT = 1 / 60;
 let last = performance.now() / 1000;

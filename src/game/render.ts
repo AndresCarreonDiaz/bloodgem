@@ -34,7 +34,7 @@ export function render(ctx: CanvasRenderingContext2D, game: Game, time: number) 
   drawFloors(ctx, game);
 
   const list: Drawable[] = [];
-  collectTerrain(list, lvl, time);
+  collectTerrain(list, game, time);
   collectEntities(list, game, time);
   list.sort((a, b) => a.key - b.key);
   for (const d of list) d.draw(ctx);
@@ -214,8 +214,21 @@ function drawFloors(ctx: CanvasRenderingContext2D, game: Game) {
   }
 }
 
-function collectTerrain(list: Drawable[], lvl: Level, time: number) {
+function collectTerrain(list: Drawable[], game: Game, time: number) {
+  const lvl = game.lvl;
   const pal = lvl.palette;
+  // cutaway: a wall/face column that would draw over the player (player is
+  // BEHIND it, i.e. just north and horizontally near) goes translucent
+  const p = game.player;
+  const occludes = (tx: number, footY: number, visualH: number) => {
+    if (p.dead) return false;
+    const cx = (tx + 0.5) * TILE;
+    if (Math.abs(p.pos.x - cx) > 18) return false;
+    const spriteTop = p.pos.y - p.pos.z - 30;
+    const spriteBot = p.pos.y - p.pos.z + 2;
+    const colTop = footY - visualH;
+    return p.pos.y < footY && spriteBot > colTop && spriteTop < footY;
+  };
   for (let ty = 0; ty < lvl.h; ty++) {
     for (let tx = 0; tx < lvl.w; tx++) {
       const tier = lvl.tierAt(tx, ty);
@@ -225,10 +238,12 @@ function collectTerrain(list: Drawable[], lvl: Level, time: number) {
         list.push({
           key: footY,
           draw: (ctx) => {
+            if (occludes(tx, footY, WALL_VISUAL_H + TILE)) ctx.globalAlpha = 0.42;
             ctx.fillStyle = pal.face;
             ctx.fillRect(tx * TILE, ty * TILE - WALL_VISUAL_H + TILE, TILE, WALL_VISUAL_H);
             ctx.fillStyle = pal.wall;
             ctx.fillRect(tx * TILE, ty * TILE - WALL_VISUAL_H, TILE, TILE);
+            ctx.globalAlpha = 1;
           },
         });
       } else if (south !== WALL_TIER && south < tier && !lvl.rampAtTile(tx, ty + 1)) {
@@ -237,10 +252,12 @@ function collectTerrain(list: Drawable[], lvl: Level, time: number) {
         list.push({
           key: footY,
           draw: (ctx) => {
+            if (occludes(tx, footY, tier * TIER_H)) ctx.globalAlpha = 0.42;
             ctx.fillStyle = pal.face;
             ctx.fillRect(tx * TILE, footY - tier * TIER_H, TILE, drop);
             ctx.fillStyle = 'rgba(255,255,255,0.05)';
             ctx.fillRect(tx * TILE, footY - tier * TIER_H, TILE, 1.5);
+            ctx.globalAlpha = 1;
           },
         });
       }

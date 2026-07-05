@@ -4,7 +4,7 @@
 export class SpriteStore {
   private images = new Map<string, HTMLImageElement>();
 
-  load(names: string[], base = '/sprites/') {
+  load(names: string[], base = 'sprites/') {
     for (const n of names) {
       const img = new Image();
       img.src = `${base}${n}.png`;
