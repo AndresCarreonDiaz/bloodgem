@@ -69,3 +69,9 @@ Bloodborne got wrong), and death-to-retry under 2 seconds (Rubinite's lesson).
   then `node scripts/dev-verify.mjs`.
 
 Design bible: `docs/GDD.md`. Build log: `docs/ROADMAP.md`.
+
+## Contributing (humans and agents)
+
+The task board is [GitHub Issues](https://github.com/AndresCarreonDiaz/bloodgem/issues)
+— start with the pinned issue, then read `docs/AGENTS.md` for the house rules
+and the two verification suites that gate every change.
