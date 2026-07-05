@@ -1,0 +1,20 @@
+{
+  "name": "bloodgem",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "gen:image": "node scripts/gen-image.mjs",
+    "gen:sfx": "node scripts/gen-sfx.mjs",
+    "gen:music": "node scripts/gen-music.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1",
+    "sharp": "^0.35.3",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.8"
+  }
+}
