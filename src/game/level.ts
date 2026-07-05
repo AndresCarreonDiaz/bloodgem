@@ -242,6 +242,11 @@ export function buildEmberRow(): Level {
   lvl.ladders.push({ tx: 60, ty: 11, topTy: 10, lowZ: TIER_H, highZ: TIER_H * 2, locked: true, id: 'gallows-ladder' });
   lvl.elevators.push({ id: 'great-chain', tx: 66, ty: 11, w: 2, h: 2, lowZ: TIER_H, highZ: TIER_H * 2, z: TIER_H, home: TIER_H, target: null });
 
+  // the painted row-house blocks (public/maps/ember.png) — the city is
+  // streets between buildings now, not an empty plaza
+  lvl.rect(12, 21, 25, 35, WALL_TIER);
+  lvl.rect(36, 22, 54, 34, WALL_TIER);
+
   // canal underlayer (t0): south band + west arm
   lvl.rect(2, 40, 69, 47, 0);
   lvl.rect(2, 16, 6, 47, 0);
@@ -280,8 +285,8 @@ export function buildEmberRow(): Level {
   // the hunt mob: a torch procession patrolling the upper streets, with a
   // Sable Priest keeping them frenzied — kill the priest first, or go around
   const mobRoute = [
-    { x: 26 * T, y: 19 * T }, { x: 50 * T, y: 19 * T },
-    { x: 50 * T, y: 24 * T }, { x: 26 * T, y: 24 * T },
+    { x: 16 * T, y: 19 * T }, { x: 52 * T, y: 19 * T },
+    { x: 52 * T, y: 20 * T }, { x: 16 * T, y: 20 * T },
   ];
   lvl.spawns.push(
     { x: 26 * T, y: 19 * T, kind: 'rabble', waypoints: mobRoute },
@@ -292,15 +297,15 @@ export function buildEmberRow(): Level {
     // the teach pair: first fight, fully visible at the foot of the chapel stairs
     { x: 17 * T, y: 16 * T, kind: 'rabble' },
     { x: 18.5 * T, y: 18 * T, kind: 'rabble' },
-    { x: 16 * T, y: 22 * T, kind: 'hound' },
+    { x: 29 * T, y: 22 * T, kind: 'hound' },
     // the ambush lesson: a hound waiting behind the market stall
-    { x: 25 * T, y: 28.5 * T, kind: 'hound' },
+    { x: 34 * T, y: 29 * T, kind: 'hound' },
     { x: 50 * T, y: 44 * T, kind: 'hound' },
     { x: 34 * T, y: 7 * T, kind: 'watchman' },   // rooftop edge, covers the mob street
     { x: 62 * T, y: 9 * T, kind: 'watchman' },   // rampart edge, covers Gallows Square
   );
 
-  lvl.bruteSpawn = { x: 52 * T, y: 31 * T };     // Gallows Square
+  lvl.bruteSpawn = { x: 61 * T, y: 29 * T };     // Gallows Square
   lvl.cassarSpawn = { x: 64 * T, y: 5 * T };     // east rampart — after the Brute falls
 
   // the living (what's left of them)
@@ -338,21 +343,21 @@ export function buildEmberRow(): Level {
   ];
   for (const [px, py, type] of props) lvl.props.push({ x: px * T + 8, y: py * T + 12, type });
   // the gallows themselves — Gallows Square earns its name
-  lvl.props.push({ x: 51 * T, y: 28 * T, type: 'gallows' });
-  lvl.props.push({ x: 55 * T + 6, y: 29 * T, type: 'gallows' });
+  lvl.props.push({ x: 58 * T, y: 26 * T, type: 'gallows' });
+  lvl.props.push({ x: 63 * T + 6, y: 27 * T, type: 'gallows' });
 
   // the executioner's paving is older than the streets around it
   lvl.matOverrides.push({ x0: 42, y0: 26, x1: 62, y1: 36, tex: 'tex_flagstone' });
 
   // environmental storytelling: they dragged the bodies to the canal
   lvl.seedDecals([
-    [51 * T + 4, 29 * T, 6, 'blood'], [52 * T, 31 * T, 4, 'blood'],
-    [53 * T, 33 * T + 6, 5, 'blood'], [55 * T, 35 * T, 4, 'blood'],
-    [56 * T + 8, 37 * T, 4, 'blood'], [57 * T + 8, 38 * T + 8, 6, 'blood'],
+    [59 * T + 4, 28 * T, 6, 'blood'], [60 * T, 30 * T, 4, 'blood'],
+    [60 * T, 33 * T + 6, 5, 'blood'], [59 * T, 35 * T, 4, 'blood'],
+    [58 * T + 8, 37 * T, 4, 'blood'], [58 * T + 8, 38 * T + 8, 6, 'blood'],
     // weathering scattered through the district
-    [10 * T, 14 * T, 5, 'moss'], [26 * T, 17 * T, 4, 'moss'], [44 * T, 21 * T, 6, 'moss'],
-    [7 * T, 30 * T, 5, 'moss'], [35 * T, 33 * T, 4, 'moss'], [62 * T, 24 * T, 5, 'moss'],
-    [20 * T, 21 * T, 7, 'crack'], [39 * T, 28 * T, 6, 'crack'], [59 * T, 17 * T, 7, 'crack'],
+    [10 * T, 14 * T, 5, 'moss'], [26 * T, 17 * T, 4, 'moss'], [58 * T, 21 * T, 6, 'moss'],
+    [8 * T, 30 * T, 5, 'moss'], [30 * T, 33 * T, 4, 'moss'], [62 * T, 24 * T, 5, 'moss'],
+    [28 * T, 21 * T, 7, 'crack'], [31 * T, 28 * T, 6, 'crack'], [59 * T, 17 * T, 7, 'crack'],
     [29 * T, 42 * T, 5, 'moss'], [46 * T, 45 * T, 6, 'moss'], [15 * T, 44 * T, 6, 'crack'],
   ]);
 

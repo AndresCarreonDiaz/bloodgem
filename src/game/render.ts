@@ -23,7 +23,20 @@ const WALL_VISUAL_H = TIER_H * 2 + 8;
 
 let lightCanvas: HTMLCanvasElement | null = null;
 
+// Painted-world mode: elevation is baked into the backdrop art, so a standing
+// entity draws at its position — only height ABOVE local ground (falls, shots,
+// particles) offsets the sprite. Physics/pos.z semantics are unchanged.
+let CUR: Game | null = null;
+function vz(x: number, y: number, z: number): number {
+  if (!CUR) return z;
+  return Math.max(0, z - CUR.lvl.groundZAt(x, y));
+}
+function backdrop(): HTMLImageElement | null {
+  return CUR ? sprites.get(`map_${CUR.lvl.name}`) : null;
+}
+
 export function render(ctx: CanvasRenderingContext2D, game: Game, time: number) {
+  CUR = game;
   const { lvl, camera } = game;
   ctx.fillStyle = COLORS.bg;
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
@@ -109,6 +122,31 @@ const TIER_TEX: Record<string, string[]> = {
 function drawFloors(ctx: CanvasRenderingContext2D, game: Game) {
   const { lvl } = game;
   const pal = lvl.palette;
+  const art = backdrop();
+  if (art) {
+    ctx.drawImage(art, 0, 0, lvl.pixelW, lvl.pixelH);
+    // broken secrets reveal alcoves the painting can't know about
+    for (const sec of lvl.secrets) {
+      if (!sec.broken) continue;
+      ctx.fillStyle = '#1a1216';
+      ctx.fillRect(sec.tx * TILE, sec.ty * TILE, sec.w * TILE, (sec.h + 1) * TILE);
+      ctx.fillStyle = 'rgba(255,255,255,0.05)';
+      ctx.fillRect(sec.tx * TILE, sec.ty * TILE, sec.w * TILE, 2);
+    }
+    // dynamic + seeded decals still land on top of the painting
+    for (const d of game.decals) {
+      const dy = d.y - vz(d.x, d.y, d.z);
+      const type = (d as { type?: string }).type ?? 'blood';
+      if (type === 'blood') {
+        ctx.fillStyle = 'rgba(110, 16, 28, 0.55)';
+        ctx.beginPath();
+        ctx.ellipse(d.x, dy, d.r, d.r * 0.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // moss/crack/rubble weathering is painted into the art now — skip
+    }
+    return;
+  }
   const floors = [pal.floor0, pal.floor1, pal.floor2];
   const texNames = TIER_TEX[lvl.name];
   for (let tier = 0; tier <= 2; tier++) {
@@ -234,6 +272,7 @@ function collectTerrain(list: Drawable[], game: Game, time: number) {
       const tier = lvl.tierAt(tx, ty);
       const south = lvl.tierAt(tx, ty + 1);
       const footY = (ty + 1) * TILE;
+      if (backdrop()) continue; // walls & cliff faces live in the painting
       if (tier === WALL_TIER) {
         list.push({
           key: footY,
@@ -295,7 +334,7 @@ function collectTerrain(list: Drawable[], game: Game, time: number) {
       key: el.ty * TILE + 0.5, // after the cliff face behind it, before riders
       draw: (ctx) => {
         const x0 = el.tx * TILE, y0 = el.ty * TILE, w = el.w * TILE, h = el.h * TILE;
-        const sy = y0 - el.z;
+        const sy = backdrop() ? y0 : y0 - el.z;
         ctx.strokeStyle = '#4a4148';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
@@ -324,8 +363,8 @@ function collectTerrain(list: Drawable[], game: Game, time: number) {
       draw: (ctx) => {
         ctx.strokeStyle = '#6a5a44';
         ctx.lineWidth = 1.5;
-        const top = footY - l.highZ - 10;
-        const bottom = l.locked ? footY - l.highZ + 14 : footY - l.lowZ; // pulled up
+        const top = backdrop() ? footY - 42 : footY - l.highZ - 10;
+        const bottom = l.locked ? top + 24 : footY - (backdrop() ? 0 : l.lowZ); // pulled up
         ctx.beginPath();
         ctx.moveTo(x + 4, bottom); ctx.lineTo(x + 4, top);
         ctx.moveTo(x + 12, bottom); ctx.lineTo(x + 12, top);
@@ -371,7 +410,7 @@ function collectEntities(list: Drawable[], game: Game, time: number) {
         const pulse = 3 + Math.sin(time * 5) * 1.2;
         ctx.fillStyle = '#c94b5e';
         ctx.save();
-        ctx.translate(d.x, d.y - d.z - 6);
+        ctx.translate(d.x, d.y - vz(d.x, d.y, d.z) - 6);
         ctx.rotate(Math.PI / 4);
         ctx.fillRect(-pulse / 2, -pulse / 2, pulse, pulse);
         ctx.restore();
@@ -394,8 +433,8 @@ function collectEntities(list: Drawable[], game: Game, time: number) {
   }
 
   for (const pr of game.lvl.props) {
-    const gz = game.lvl.groundZAt(pr.x, pr.y);
-    list.push({ key: pr.y, draw: (ctx) => drawProp(ctx, pr.x, pr.y - gz, pr.type, time) });
+    if (backdrop() && pr.type !== 'crystal' && pr.type !== 'gallows' && pr.type !== 'post') continue; // painted in
+    list.push({ key: pr.y, draw: (ctx) => drawProp(ctx, pr.x, pr.y, pr.type, time) });
   }
 
   const grist = game.grist;
@@ -425,19 +464,19 @@ function collectEntities(list: Drawable[], game: Game, time: number) {
     list.push({
       key: n.y,
       draw: (ctx) => {
-        shadow(ctx, n.x, n.y, gz, gz, 5);
+        shadow(ctx, n.x, n.y, 0, 0, 5);
         const img = sprites.get(`${n.id}_s`);
-        if (img) drawSprite(ctx, img, n.x, n.y - gz);
+        if (img) drawSprite(ctx, img, n.x, n.y);
         else {
           ctx.fillStyle = '#5a5264';
-          ctx.fillRect(n.x - 4, n.y - gz - 13, 8, 13);
+          ctx.fillRect(n.x - 4, n.y - 13, 8, 13);
         }
         const near = Math.hypot(game.player.pos.x - n.x, game.player.pos.y - n.y) < 26;
         if (near && !game.dialogue) {
           ctx.fillStyle = 'rgba(220, 205, 180, 0.85)';
           ctx.font = 'italic 8px Georgia, serif';
           ctx.textAlign = 'center';
-          ctx.fillText('[E] speak', n.x, n.y - gz - 32);
+          ctx.fillText('[E] speak', n.x, n.y - 32);
         }
       },
     });
@@ -489,7 +528,7 @@ function collectEntities(list: Drawable[], game: Game, time: number) {
         const pulse = 3.2 + Math.sin(time * 4 + pk.x) * 1.1;
         ctx.fillStyle = '#d43148';
         ctx.save();
-        ctx.translate(pk.x, pk.y - gz - 5);
+        ctx.translate(pk.x, pk.y - 5);
         ctx.rotate(Math.PI / 4);
         ctx.fillRect(-pulse / 2, -pulse / 2, pulse, pulse);
         ctx.restore();
@@ -504,8 +543,8 @@ function collectEntities(list: Drawable[], game: Game, time: number) {
         ctx.strokeStyle = '#e8d9a0';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(s.x, s.y - s.z);
-        ctx.lineTo(s.x - s.vx * 0.02, s.y - s.vy * 0.02 - (s.z - s.vz * 0.02));
+        ctx.moveTo(s.x, s.y - vz(s.x, s.y, s.z));
+        ctx.lineTo(s.x - s.vx * 0.02, s.y - s.vy * 0.02 - vz(s.x, s.y, s.z));
         ctx.stroke();
       },
     });
@@ -518,8 +557,8 @@ function collectEntities(list: Drawable[], game: Game, time: number) {
         ctx.strokeStyle = '#f0e6d0';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(s.x, s.y - s.z);
-        ctx.lineTo(s.x - s.vx * 0.016, s.y - s.vy * 0.016 - s.z);
+        ctx.moveTo(s.x, s.y - vz(s.x, s.y, s.z));
+        ctx.lineTo(s.x - s.vx * 0.016, s.y - s.vy * 0.016 - vz(s.x, s.y, s.z));
         ctx.stroke();
       },
     });
@@ -531,7 +570,7 @@ function collectEntities(list: Drawable[], game: Game, time: number) {
       draw: (ctx) => {
         ctx.globalAlpha = 1 - p.life / p.maxLife;
         ctx.fillStyle = p.color;
-        ctx.fillRect(p.x - p.size / 2, p.y - p.z - p.size / 2, p.size, p.size);
+        ctx.fillRect(p.x - p.size / 2, p.y - vz(p.x, p.y, p.z) - p.size / 2, p.size, p.size);
         ctx.globalAlpha = 1;
       },
     });
@@ -544,9 +583,9 @@ function playerDir(p: Player): string {
 }
 
 function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, lvl: Level) {
-  const gz = lvl.groundZAt(p.pos.x, p.pos.y);
-  shadow(ctx, p.pos.x, p.pos.y, p.pos.z, Math.min(gz, p.pos.z), 6);
-  const x = p.pos.x, y = p.pos.y - p.pos.z;
+  const h = p.climbing ? 0 : vz(p.pos.x, p.pos.y, p.pos.z);
+  shadow(ctx, p.pos.x, p.pos.y, h, 0, 6);
+  const x = p.pos.x, y = p.pos.y - h;
 
   if (p.invulnerable && p.visceralT <= 0) ctx.globalAlpha = 0.55; // dash i-frame shimmer
 
@@ -621,9 +660,9 @@ function drawPlayer(ctx: CanvasRenderingContext2D, p: Player, lvl: Level) {
 }
 
 function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy, game: Game, _time: number) {
-  const gz = game.lvl.groundZAt(e.pos.x, e.pos.y);
-  shadow(ctx, e.pos.x, e.pos.y, e.pos.z, Math.min(gz, e.pos.z), 6);
-  const x = e.pos.x, y = e.pos.y - e.pos.z;
+  const hh = vz(e.pos.x, e.pos.y, e.pos.z);
+  shadow(ctx, e.pos.x, e.pos.y, hh, 0, 6);
+  const x = e.pos.x, y = e.pos.y - hh;
 
   // wind-up telegraphs (red = dodge)
   if (e.state === 'windup' && !e.isSniper) {
@@ -634,8 +673,8 @@ function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy, game: Game, _time: n
     ctx.strokeStyle = 'rgba(212, 49, 72, 0.8)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(e.pos.x, e.pos.y - e.pos.z);
-    ctx.arc(e.pos.x, e.pos.y - e.pos.z, range, dir - RABBLE.arc / 2, dir + RABBLE.arc / 2);
+    ctx.moveTo(e.pos.x, e.pos.y - vz(e.pos.x, e.pos.y, e.pos.z));
+    ctx.arc(e.pos.x, e.pos.y - vz(e.pos.x, e.pos.y, e.pos.z), range, dir - RABBLE.arc / 2, dir + RABBLE.arc / 2);
     ctx.closePath();
     ctx.stroke();
     ctx.fillStyle = `rgba(212, 49, 72, ${0.12 + 0.25 * progress})`;
@@ -646,8 +685,8 @@ function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy, game: Game, _time: n
     ctx.strokeStyle = e.aimLocked ? 'rgba(255, 90, 100, 0.9)' : 'rgba(212, 49, 72, 0.3)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(e.pos.x, e.pos.y - e.pos.z - 12);
-    ctx.lineTo(e.lockX, e.lockY - e.lockZ - 8);
+    ctx.moveTo(e.pos.x, e.pos.y - vz(e.pos.x, e.pos.y, e.pos.z) - 12);
+    ctx.lineTo(e.lockX, e.lockY - vz(e.lockX, e.lockY, e.lockZ) - 8);
     ctx.stroke();
   }
 
@@ -657,7 +696,7 @@ function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy, game: Game, _time: n
     ctx.strokeStyle = `rgba(217, 138, 138, ${0.7 * (1 - t)})`;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(e.pos.x, e.pos.y - e.pos.z - 8, 12 + t * 60, 0, Math.PI * 2);
+    ctx.arc(e.pos.x, e.pos.y - vz(e.pos.x, e.pos.y, e.pos.z) - 8, 12 + t * 60, 0, Math.PI * 2);
     ctx.stroke();
   }
 
@@ -712,7 +751,7 @@ function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy, game: Game, _time: n
 }
 
 function drawBrute(ctx: CanvasRenderingContext2D, b: Brute, game: Game) {
-  const x = b.pos.x, y = b.pos.y - b.pos.z;
+  const x = b.pos.x, y = b.pos.y - vz(b.pos.x, b.pos.y, b.pos.z);
 
   if (!b.alive) {
     // the corpse stays — chains finally still
@@ -729,7 +768,7 @@ function drawBrute(ctx: CanvasRenderingContext2D, b: Brute, game: Game) {
     return;
   }
 
-  shadow(ctx, b.pos.x, b.pos.y, b.pos.z, b.pos.z, 12);
+  shadow(ctx, b.pos.x, b.pos.y, vz(b.pos.x, b.pos.y, b.pos.z), 0, 12);
 
   // telegraphs
   const aimDir = Math.atan2(game.player.pos.y - b.pos.y, game.player.pos.x - b.pos.x);
@@ -791,7 +830,7 @@ function drawBrute(ctx: CanvasRenderingContext2D, b: Brute, game: Game) {
 }
 
 function drawMother(ctx: CanvasRenderingContext2D, m: Mother, game: Game, time: number) {
-  const x = m.pos.x, y = m.pos.y - m.pos.z;
+  const x = m.pos.x, y = m.pos.y - vz(m.pos.x, m.pos.y, m.pos.z);
 
   // phase 2: the dreaming eye opens in the seam behind her
   if (m.phase2) {
@@ -809,7 +848,7 @@ function drawMother(ctx: CanvasRenderingContext2D, m: Mother, game: Game, time: 
     ctx.fill();
   }
 
-  shadow(ctx, m.pos.x, m.pos.y, m.pos.z, m.pos.z, 14);
+  shadow(ctx, m.pos.x, m.pos.y, vz(m.pos.x, m.pos.y, m.pos.z), 0, 14);
 
   const aimDir = Math.atan2(game.player.pos.y - m.pos.y, game.player.pos.x - m.pos.x);
   if (m.state === 'claw-windup') {
@@ -866,8 +905,8 @@ function drawMother(ctx: CanvasRenderingContext2D, m: Mother, game: Game, time: 
 }
 
 function drawGrist(ctx: CanvasRenderingContext2D, g: Grist, game: Game) {
-  const x = g.pos.x, y = g.pos.y - g.pos.z;
-  shadow(ctx, g.pos.x, g.pos.y, g.pos.z, g.pos.z, 11);
+  const x = g.pos.x, y = g.pos.y - vz(g.pos.x, g.pos.y, g.pos.z);
+  shadow(ctx, g.pos.x, g.pos.y, vz(g.pos.x, g.pos.y, g.pos.z), 0, 11);
 
   const aimDir = Math.atan2(game.player.pos.y - g.pos.y, game.player.pos.x - g.pos.x);
   if (g.state === 'sweep-windup') {
@@ -1038,8 +1077,8 @@ function drawProp(ctx: CanvasRenderingContext2D, x: number, y: number, type: str
 }
 
 function drawCassar(ctx: CanvasRenderingContext2D, c: Cassar, game: Game, time: number) {
-  const x = c.pos.x, y = c.pos.y - c.pos.z;
-  shadow(ctx, c.pos.x, c.pos.y, c.pos.z, c.pos.z, 6);
+  const x = c.pos.x, y = c.pos.y - vz(c.pos.x, c.pos.y, c.pos.z);
+  shadow(ctx, c.pos.x, c.pos.y, vz(c.pos.x, c.pos.y, c.pos.z), 0, 6);
 
   const aimDir = Math.atan2(game.player.pos.y - c.pos.y, game.player.pos.x - c.pos.x);
   // combo telegraph — a duelist's thrust line, not a mob's arc
@@ -1108,7 +1147,7 @@ function drawFloatTexts(ctx: CanvasRenderingContext2D, game: Game) {
   for (const t of game.texts) {
     ctx.globalAlpha = Math.min(1, t.life * 3);
     ctx.fillStyle = t.color;
-    ctx.fillText(t.text, t.x, t.y - t.z);
+    ctx.fillText(t.text, t.x, t.y - vz(t.x, t.y, t.z));
   }
   ctx.globalAlpha = 1;
 }

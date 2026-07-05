@@ -47,6 +47,8 @@ sprites.load([
   'mother_s', 'mother2_s', 'cassar_s',
 ]);
 sprites.load(['tex_cobble', 'tex_flagstone', 'tex_canal', 'tex_minerock', 'tex_planks', 'tex_minehead'], 'tiles/');
+// painted world maps — when present, tiles/walls/faces are skipped entirely
+sprites.load(['map_ember', 'map_undervein'], 'maps/');
 
 function advanceTitle() {
   if (state === 'title') {

@@ -54,8 +54,8 @@ check('all 11 sprites loaded', spriteOk);
 await page.evaluate(() => {
   const g = window.__game;
   const e = g.enemies.find((x) => x.kind === 'rabble' && !x.waypoints);
-  g.player.pos = { x: 192, y: 544, z: 32 };
-  e.pos = { x: 252, y: 544, z: 32 };
+  g.player.pos = { x: 448, y: 432, z: 32 };
+  e.pos = { x: 508, y: 432, z: 32 };
 });
 await page.waitForTimeout(800); // camera settles on the new position
 await page.evaluate(() => {
