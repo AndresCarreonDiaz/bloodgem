@@ -164,7 +164,7 @@ export function drawHud(ctx: CanvasRenderingContext2D, game: Game, mouse: { x: n
   if (game.paused) drawPause(ctx, game);
   if (game.dialogue) drawDialogue(ctx, game);
   if (game.menuOpen) drawVigilMenu(ctx, game);
-  if (game.endingChoice) drawEndingChoice(ctx);
+  if (game.endingChoice) drawEndingChoice(ctx, game);
   if (game.ending) drawEndingCard(ctx, game.ending);
 }
 
@@ -266,8 +266,8 @@ function drawVigilMenu(ctx: CanvasRenderingContext2D, game: Game) {
   ctx.fillText('[1–4] cut a facet   ·   [E] rise and hunt', VIEW_W / 2, y + h - 12);
 }
 
-function drawEndingChoice(ctx: CanvasRenderingContext2D) {
-  const w = 400, h = 130, x = (VIEW_W - w) / 2, y = (VIEW_H - h) / 2;
+function drawEndingChoice(ctx: CanvasRenderingContext2D, game: Game) {
+  const w = 400, h = 152, x = (VIEW_W - w) / 2, y = (VIEW_H - h) / 2;
   panel(ctx, x, y, w, h);
   ctx.textAlign = 'center';
   ctx.fillStyle = '#dccdb4';
@@ -281,6 +281,14 @@ function drawEndingChoice(ctx: CanvasRenderingContext2D) {
   ctx.fillText('[1]  SHATTER THE HEART', VIEW_W / 2, y + 78);
   ctx.fillStyle = '#e8b04a';
   ctx.fillText('[2]  SEAL THE SEAM', VIEW_W / 2, y + 100);
+  if (game.marrowShards >= 3) {
+    ctx.fillStyle = '#e8e2d0';
+    ctx.fillText('[3]  SWALLOW THE FACET', VIEW_W / 2, y + 122);
+  } else {
+    ctx.fillStyle = 'rgba(232, 226, 208, 0.25)';
+    ctx.font = 'italic 10px Georgia, serif';
+    ctx.fillText(`something is missing… (${game.marrowShards}/3 marrow shards)`, VIEW_W / 2, y + 122);
+  }
 }
 
 const ENDINGS: Record<string, { title: string; body: string[] }> = {
@@ -293,6 +301,19 @@ const ENDINGS: Record<string, { title: string; body: string[] }> = {
       'and sick, and mortal. And free.',
       '',
       'Dawn, when it comes, is only dawn.',
+    ],
+  },
+  swallow: {
+    title: 'THE NEW SLEEPER',
+    body: [
+      'You eat the light. It does not resist. It has been waiting',
+      'so long for a mouth.',
+      'You curl into the seam and it closes around you like a palm —',
+      'warm, patient, older than hunger.',
+      '',
+      'The city above will drink, and forget, and pray to something new.',
+      'Let them come with their picks, someday.',
+      'Let them wake what they find.',
     ],
   },
   seal: {

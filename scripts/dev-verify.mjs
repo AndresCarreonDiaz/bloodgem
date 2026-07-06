@@ -655,10 +655,19 @@ await page.waitForTimeout(250);
 const choice = await page.evaluate(() => window.__game.endingChoice);
 check('the Heartseam offers the choice', choice === true);
 await page.screenshot({ path: `${OUT}/m2-choice.png` });
-await page.keyboard.press('Digit1'); // SHATTER
+// the third door is barred without the king's bone
+await page.keyboard.press('Digit3');
+await page.waitForTimeout(200);
+const gated = await page.evaluate(() => window.__game.ending === null && window.__game.endingChoice === true);
+check('SWALLOW is gated without 3 marrow shards', gated === true);
+await page.evaluate(() => {
+  const g = window.__game;
+  g.flags.gemsTaken.add('marrow-1'); g.flags.gemsTaken.add('marrow-2'); g.flags.gemsTaken.add('marrow-3');
+});
+await page.keyboard.press('Digit3'); // SWALLOW THE FACET
 await page.waitForTimeout(300);
 const ending = await page.evaluate(() => window.__game.ending);
-check('ending chosen: THE BROKEN VEIN', ending === 'shatter', `ending=${ending}`);
+check('ending chosen: THE NEW SLEEPER', ending === 'swallow', `ending=${ending}`);
 await page.waitForTimeout(400);
 await page.screenshot({ path: `${OUT}/m3-ending.png` });
 

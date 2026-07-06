@@ -76,6 +76,7 @@ window.addEventListener('keydown', (e) => {
   if (game.endingChoice) {
     if (e.code === 'Digit1') game.chooseEnding('shatter');
     if (e.code === 'Digit2') game.chooseEnding('seal');
+    if (e.code === 'Digit3') game.chooseEnding('swallow');
     return;
   }
   if (game.dialogue) {

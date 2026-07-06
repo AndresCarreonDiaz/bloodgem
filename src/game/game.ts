@@ -74,7 +74,7 @@ export class Game {
   paused = false;
   private menuCd = 0; // blocks the lamp from re-opening off the menu-close keypress
   endingChoice = false;
-  ending: 'shatter' | 'seal' | null = null;
+  ending: 'shatter' | 'seal' | 'swallow' | null = null;
   heartseam: { x: number; y: number } | null = null;
 
   constructor() {
@@ -244,8 +244,13 @@ export class Game {
     this.events.push('menu_close');
   }
 
-  chooseEnding(which: 'shatter' | 'seal') {
+  get marrowShards(): number {
+    return [...this.flags.gemsTaken].filter((g) => g.startsWith('marrow-')).length;
+  }
+
+  chooseEnding(which: 'shatter' | 'seal' | 'swallow') {
     if (!this.endingChoice) return;
+    if (which === 'swallow' && this.marrowShards < 3) return; // the king's bone, all of it
     this.endingChoice = false;
     this.ending = which;
     this.events.push('ending');
@@ -753,10 +758,16 @@ export class Game {
       if (Math.abs(this.player.pos.z - gz) > TIER_H / 2) continue;
       if (Math.hypot(this.player.pos.x - pk.x, this.player.pos.y - pk.y) > 12) continue;
       this.flags.gemsTaken.add(pk.gem);
-      this.player.gems.push(pk.gem);
-      this.player.recomputeStats();
-      const gem = GEMS[pk.gem];
-      this.texts.push({ x: pk.x, y: pk.y, z: gz + 20, text: `${gem?.name ?? pk.gem} taken`, life: 2.2, color: '#c94b5e' });
+      if (pk.gem.startsWith('marrow-')) {
+        // not a gem — a relic. It hums against the teeth.
+        this.gainLucidity('the king’s own bone');
+        this.texts.push({ x: pk.x, y: pk.y, z: gz + 20, text: `A MARROW SHARD (${this.marrowShards}/3)`, life: 2.5, color: '#e8e2d0' });
+      } else {
+        this.player.gems.push(pk.gem);
+        this.player.recomputeStats();
+        const gem = GEMS[pk.gem];
+        this.texts.push({ x: pk.x, y: pk.y, z: gz + 20, text: `${gem?.name ?? pk.gem} taken`, life: 2.2, color: '#c94b5e' });
+      }
       this.events.push('pickup');
       this.save();
     }

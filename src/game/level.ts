@@ -322,6 +322,9 @@ export function buildEmberRow(): Level {
   lvl.pickups.push(
     { x: 38 * T, y: 4 * T, gem: 'whetstone' },     // rooftop pocket
     { x: 3 * T, y: 46 * T, gem: 'gilded-core' },   // canal west arm dead-end
+    // marrow shards — the king's own bone, for those who look everywhere
+    { x: 31 * T, y: 3 * T, gem: 'marrow-1' },      // rooftop pocket, far corner
+    { x: 3 * T, y: 17 * T, gem: 'marrow-2' },      // north tip of the canal arm
   );
 
   // the Canal Hollow: a bricked-up alcove behind a cracked wall — strike it
@@ -424,6 +427,8 @@ export function buildUndervein(): Level {
     [40 * T, 22 * T, 6, 'crack'], [48 * T, 28 * T, 5, 'rubble'], [12 * T, 36 * T, 6, 'rubble'],
     [50 * T, 14 * T, 5, 'crack'], [33 * T, 10 * T, 5, 'rubble'], [20 * T, 34 * T, 4, 'rubble'],
   ]);
+
+  lvl.pickups.push({ x: 52 * T, y: 4 * T, gem: 'marrow-3' }); // behind the crystal crown
 
   lvl.spawns.push(
     { x: 18 * T, y: 20 * T, kind: 'husk' },
