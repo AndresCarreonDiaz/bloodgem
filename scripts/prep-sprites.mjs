@@ -21,17 +21,17 @@ const JOBS = [
   { src: 'p2_husk_s', out: 'husk_s', h: 34 },
   { src: 'p2_chorister_s', out: 'chorister_s', h: 28 },
   { src: 'p2_priest_s', out: 'priest_s', h: 35 },
-  // not yet repainted — old sources, scaled for the closer camera
-  { src: 'brute_s', out: 'brute_s', h: 54 },
-  { src: 'grist_s', out: 'grist_s', h: 52 },
-  { src: 'mother_s', out: 'mother_s', h: 74 },
-  { src: 'mother2_s', out: 'mother2_s', h: 74 },
-  { src: 'cassar_s', out: 'cassar_s', h: 35 },
-  { src: 'maud_s', out: 'maud_s', h: 26 },
-  { src: 'verne_s', out: 'verne_s', h: 38 },
-  { src: 'sissel_s', out: 'sissel_s', h: 23 },
-  { src: 'broker_s', out: 'broker_s', h: 31 },
-  { src: 'dunhill_s', out: 'dunhill_s', h: 33 },
+  // painterly bosses + NPCs
+  { src: 'p2_brute_s', out: 'brute_s', h: 54 },
+  { src: 'p2_grist_s', out: 'grist_s', h: 52 },
+  { src: 'p2_mother_s', out: 'mother_s', h: 74 },
+  { src: 'p2_mother2_s', out: 'mother2_s', h: 74 },
+  { src: 'p2_cassar_s', out: 'cassar_s', h: 35 },
+  { src: 'p2_maud_s', out: 'maud_s', h: 26 },
+  { src: 'p2_verne_s', out: 'verne_s', h: 38 },
+  { src: 'p2_sissel_s', out: 'sissel_s', h: 23 },
+  { src: 'p2_broker_s', out: 'broker_s', h: 31 },
+  { src: 'p2_dunhill_s', out: 'dunhill_s', h: 33 },
 ];
 
 await mkdir('public/sprites', { recursive: true });
