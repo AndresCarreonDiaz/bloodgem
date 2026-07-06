@@ -85,6 +85,23 @@ next unchecked items, log what happened, update checkboxes.
 
 ## Iteration log
 
+### Iterations 18-25 — 2026-07-05/06 — THE BOARD ERA (condensed)
+- Repo pushed to github.com/AndresCarreonDiaz/bloodgem; GitHub Issues became
+  the task board (pinned #1 = onboarding; docs/AGENTS.md = house rules).
+- Deployed to GitHub Pages (auto on push): andrescarreondiaz.github.io/bloodgem
+- ART: owner rejected tiles, then pixel top-down ("cheap"). Final direction:
+  PAINTERLY DIABLO-STYLE 3/4 (layout-conditioned painted worlds via
+  scripts/gen-worldart.mjs; painting adopted into collision where they
+  disagreed), full painterly character set (player 20 frames + enemies +
+  strides + E/W mirror + bosses + NPCs), camera 480×270, REPLACED-style
+  cinematic post (GPU bloom, film grain, ground-glow, volumetric rays).
+  True-3D rewrite assessed and DECLINED. 121 fps held.
+- CONTENT: cutaway fade (#7), third ending SWALLOW THE FACET + 3 Marrow
+  Shards (#4), quicksilver ammo economy 12-pouch/-1 shot/+1 kill (#5).
+- Suites grew to 66 gameplay + 18 structural; verify scale factors follow
+  VIEW 480×270.
+- OPEN: #2 Gilded Beast, #3 Undervein variants, #8 owner playtest verdict.
+
 ### Iteration 17 — 2026-07-05
 - DUNHILL, THE FERRYMAN: the last named NPC from the GDD. Canal fast travel
   (west dock ↔ east dock) as a dialogue-close ride with fade + camera snap;

@@ -12,7 +12,7 @@ comment on the issue with exactly why and leave it open.
 npm install
 npm run build                                # tsc + vite, must be clean
 npx vite preview --port 4199 &               # serve the build
-node scripts/dev-verify.mjs /tmp             # 62 gameplay checks (headless Chromium)
+node scripts/dev-verify.mjs /tmp             # 66 gameplay checks (headless Chromium)
 node scripts/audit-paths.mjs                 # 18 structural/reachability checks
 ```
 
@@ -54,6 +54,17 @@ feature, add checks for it in `scripts/dev-verify.mjs` (gameplay) and/or
 5. Red = the reserved signal color. If it's red it means danger/currency/god.
    Don't add red UI that means nothing.
 6. Tone: oblique, Bloodborne-flavored, never jokey. Item text carries lore.
+
+## Art direction — SETTLED, do not relitigate
+
+Painterly Diablo-style 3/4 aerial, Bloodborne mood, 480×270 camera, cinematic
+post (bloom/grain/volumetrics). The owner rejected pixel art twice; a true-3D
+rewrite was assessed and declined. Worlds are single painted images per level
+(`scripts/gen-worldart.mjs`, layout-conditioned); characters are painterly
+sprites (`scripts/gen-image.mjs`, `p2_` prefix, green-screen keyed, prepped by
+`scripts/prep-sprites.mjs`). If a new painting disagrees with collision, adopt
+the painting INTO collision (precedent: Ember Row's row-house blocks) and
+re-run the structural audit.
 
 ## Play it
 
