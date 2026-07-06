@@ -61,6 +61,7 @@ export class Player implements Entity {
   dropLockT = 0;    // brief input lock after hopping off a ledge
 
   phials = PLAYER.phials;
+  shards = PLAYER.shardPouch; // quicksilver for the Shardcaster
   drinkT = 0;       // > 0 while committed to the swig
 
   hurtT = 0;
@@ -300,6 +301,7 @@ export class Player implements Entity {
     this.rally = 0;
     this.stamina = PLAYER.stamina;
     this.phials = PLAYER.phials;
+    this.shards = PLAYER.shardPouch;
     this.drinkT = 0;
     this.dead = false;
     this.attack = null;

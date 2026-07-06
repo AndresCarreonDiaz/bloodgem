@@ -80,11 +80,15 @@ export function drawHud(ctx: CanvasRenderingContext2D, game: Game, mouse: { x: n
   ctx.fillRect(-3, -3, 6, 6);
   ctx.restore();
 
-  // shard (parry) cooldown pip
+  // quicksilver shards: pip + count (empty pouch = no parries)
   ctx.beginPath();
   ctx.arc(bx + 6, by + bh + 16, 4, 0, Math.PI * 2);
-  ctx.fillStyle = p.shardCd <= 0 ? '#f0e6d0' : '#4a4040';
+  ctx.fillStyle = p.shards <= 0 ? '#3a2a2e' : p.shardCd <= 0 ? '#f0e6d0' : '#4a4040';
   ctx.fill();
+  ctx.textAlign = 'left';
+  ctx.font = '700 9px Georgia, serif';
+  ctx.fillStyle = p.shards <= 0 ? 'rgba(212,49,72,0.9)' : 'rgba(240,230,208,0.75)';
+  ctx.fillText(`×${p.shards}`, bx + 13, by + bh + 19);
 
   // crosshair
   ctx.strokeStyle = 'rgba(240, 230, 208, 0.75)';

@@ -96,6 +96,23 @@ const visc = await page.evaluate(() => ({
 check('visceral + max rally + slow-mo', visc.hp > 50 && visc.timeScale < 1, JSON.stringify(visc));
 await page.waitForTimeout(800);
 
+// --- quicksilver economy: shots spend, kills replenish, lamps refill
+// (the earlier parry spent 1 and the visceral kill earned 1 back — net 12,
+// which is the economy working; test the spend in isolation instead)
+await page.evaluate(() => { window.__game.player.shards = 3; });
+await clickAt(await page.evaluate(() => window.__game.camera.toScreen(window.__game.player.pos.x - 60, window.__game.player.pos.y - 32)), 'right');
+await page.waitForTimeout(300);
+const ammo1 = await page.evaluate(() => window.__game.player.shards);
+check('parry shots spend quicksilver', ammo1 === 2, `shards=${ammo1}/3`);
+await page.evaluate(() => { window.__game.player.shards = 0; });
+await page.keyboard.press('KeyE'); // ensure no menu weirdness
+const preShards = await page.evaluate(() => window.__game.shards?.length ?? 0);
+await clickAt(await page.evaluate(() => window.__game.camera.toScreen(window.__game.player.pos.x + 40, window.__game.player.pos.y - 32)), 'right');
+await page.waitForTimeout(200);
+const dry = await page.evaluate(() => window.__game.shards.length);
+check('empty pouch: the Shardcaster stays silent', dry === preShards, `inflight=${dry}`);
+await page.evaluate(() => { window.__game.player.shards = 12; });
+
 // --- phial
 await page.evaluate(() => {
   const g = window.__game;
@@ -124,6 +141,8 @@ const rest = await page.evaluate(() => ({
   enemies: window.__game.enemies.filter((e) => e.alive).length,
 }));
 check('vigil lamp rest: refill + world re-wakes', rest.hp === 100 && rest.phials === 5 && rest.enemies === 12, JSON.stringify(rest));
+const ammoRefill = await page.evaluate(() => window.__game.player.shards);
+check('lamp rest refills the quicksilver pouch', ammoRefill === 12, `shards=${ammoRefill}`);
 
 // --- vigil menu + Facet skill purchase
 const menuOpen = await page.evaluate(() => window.__game.menuOpen);

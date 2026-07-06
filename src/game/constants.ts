@@ -38,6 +38,7 @@ export const PLAYER = {
   rallyRate: 0.65,
   respawnDelay: 1.6, // death-to-retry < 2s (Rubinite lesson)
   phials: 5,
+  shardPouch: 12, // quicksilver — every parry attempt is spent metal
   phialHeal: 45,
   phialDrinkTime: 0.55, // animation-committed swig
 };

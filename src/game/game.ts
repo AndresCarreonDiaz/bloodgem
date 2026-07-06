@@ -424,8 +424,9 @@ export class Game {
   }
 
   private resolveShardFire(input: Input) {
-    if (this.player.busy || this.player.shardCd > 0) return;
+    if (this.player.busy || this.player.shardCd > 0 || this.player.shards <= 0) return;
     if (!input.consume('shard', PLAYER.inputBuffer)) return;
+    this.player.shards--;
     this.player.shardCd = this.player.stats.shardCd;
     this.events.push('shard');
     const dir = this.player.aim;
@@ -536,6 +537,8 @@ export class Game {
 
   private onEnemyDeath(e: Combatant) {
     this.events.push('enemy_die');
+    // the dead give up their quicksilver
+    this.player.shards = Math.min(PLAYER.shardPouch, this.player.shards + 1);
     const boss = 'isBoss' in e;
     const base = e instanceof Brute ? BRUTE.gemdust : e instanceof Mother ? MOTHER.gemdust : e instanceof Grist ? GRIST.gemdust : e instanceof Cassar ? CASSAR.gemdust : (DUST[(e as Enemy).kind] ?? 25);
     const amount = Math.round(base * this.player.stats.dustMult);
@@ -969,6 +972,7 @@ export class Game {
     this.player.hp = this.player.stats.maxHp;
     this.player.rally = 0;
     this.player.phials = PLAYER.phials;
+    this.player.shards = PLAYER.shardPouch;
     this.lvl.playerSpawn = { x: lamp.x, y: lamp.y + 12 };
     this.spawnEnemies();
     this.texts.push({ x: lamp.x, y: lamp.y, z: 30, text: 'VIGIL KEPT', life: 1.6, color: '#e8b04a' });
