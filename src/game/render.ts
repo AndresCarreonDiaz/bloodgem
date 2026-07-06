@@ -692,8 +692,12 @@ function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy, game: Game, _time: n
   const h = staggered ? 9 : 13;
   const white = e.flashT > 0 || e.telegraphFlash;
 
-  const bobE = (e.state === 'chase' || (e.state === 'idle' && e.waypoints)) ? Math.abs(Math.sin(e.stateT * 9)) * 1.2 : 0;
-  const img = sprites.get(`${e.kind}_s`);
+  const walking = e.state === 'chase' || (e.state === 'idle' && e.waypoints);
+  const bobE = walking ? Math.abs(Math.sin(e.stateT * 9)) * 1.2 : 0;
+  // stride frame while walking; face the player east/west via mirror
+  const strideImg = walking && Math.floor(e.stateT * 5.5) % 2 === 1 ? sprites.get(`${e.kind}_s_b`) : null;
+  const img = strideImg ?? sprites.get(`${e.kind}_s`);
+  const flipE = game.player.pos.x < e.pos.x - 4 && !e.isSniper;
   if (img) {
     if (staggered) {
       // kneeling: squash the sprite vertically
@@ -703,7 +707,7 @@ function drawEnemy(ctx: CanvasRenderingContext2D, e: Enemy, game: Game, _time: n
       drawSprite(ctx, img, 0, 0, white);
       ctx.restore();
     } else {
-      drawSprite(ctx, img, x, y - bobE, white);
+      drawSprite(ctx, img, x, y - bobE, white, flipE);
     }
   } else {
     // tofu fallback: hunched body, garnet buboes

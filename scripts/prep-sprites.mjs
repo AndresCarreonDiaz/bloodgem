@@ -16,6 +16,9 @@ const JOBS = [
       'atk_e_a', 'atk_e_b', 'atk_w_a', 'atk_w_b'].map((n) => ({ src: `p2_${n}`, out: n, h: 35 })),
   // painterly core enemies
   { src: 'p2_rabble_s', out: 'rabble_s', h: 31 },
+  { src: 'p2_rabble_s_b', out: 'rabble_s_b', h: 31 },
+  { src: 'p2_husk_s_b', out: 'husk_s_b', h: 34 },
+  { src: 'p2_hound_s_b', out: 'hound_s_b', h: 22 },
   { src: 'p2_hound_s', out: 'hound_s', h: 22 },
   { src: 'p2_watchman_s', out: 'watchman_s', h: 34 },
   { src: 'p2_husk_s', out: 'husk_s', h: 34 },

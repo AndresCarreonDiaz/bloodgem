@@ -45,7 +45,7 @@ sprites.load([
   'player_n_b', 'player_s_b', 'player_e_b', 'player_w_b',
   'player_n_c', 'player_s_c', 'player_e_c', 'player_w_c',
   'atk_s_a', 'atk_s_b', 'atk_n_a', 'atk_n_b', 'atk_e_a', 'atk_e_b', 'atk_w_a', 'atk_w_b',
-  'rabble_s', 'watchman_s', 'hound_s', 'brute_s', 'priest_s', 'husk_s', 'chorister_s',
+  'rabble_s', 'rabble_s_b', 'watchman_s', 'hound_s', 'hound_s_b', 'brute_s', 'priest_s', 'husk_s', 'husk_s_b', 'chorister_s',
   'mother_s', 'mother2_s', 'cassar_s',
 ]);
 sprites.load(['tex_cobble', 'tex_flagstone', 'tex_canal', 'tex_minerock', 'tex_planks', 'tex_minehead'], 'tiles/');

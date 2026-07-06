@@ -28,11 +28,19 @@ export function drawSprite(
   feetX: number,
   feetY: number,
   white = false,
+  flip = false,
 ) {
   const x = Math.round(feetX - img.width / 2);
   const y = Math.round(feetY - img.height + 1);
+  if (flip) {
+    ctx.save();
+    ctx.translate(feetX, 0);
+    ctx.scale(-1, 1);
+    ctx.translate(-feetX, 0);
+  }
   if (!white) {
     ctx.drawImage(img, x, y);
+    if (flip) ctx.restore();
     return;
   }
   if (!flashCanvas) flashCanvas = document.createElement('canvas');
@@ -48,4 +56,5 @@ export function drawSprite(
   fc.fillRect(0, 0, img.width, img.height);
   fc.globalCompositeOperation = 'source-over';
   ctx.drawImage(flashCanvas, 0, 0, img.width, img.height, x, y, img.width, img.height);
+  if (flip) ctx.restore();
 }
