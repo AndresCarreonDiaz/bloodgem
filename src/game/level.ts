@@ -246,6 +246,7 @@ export function buildEmberRow(): Level {
   // streets between buildings now, not an empty plaza
   lvl.rect(12, 21, 25, 35, WALL_TIER);
   lvl.rect(36, 22, 54, 34, WALL_TIER);
+  lvl.rect(64, 18, 69, 26, WALL_TIER); // the corner house east of Gallows Square
 
   // canal underlayer (t0): south band + west arm
   lvl.rect(2, 40, 69, 47, 0);

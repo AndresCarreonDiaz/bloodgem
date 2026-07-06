@@ -3,8 +3,8 @@
 // freezes ~2 frames longer than attacker (Capcom's The Punisher); i-frames cancel on
 // attack (Hades); aggro clamped so enemies never strike from off-screen (Tunic flaw).
 
-export const VIEW_W = 640;
-export const VIEW_H = 360;
+export const VIEW_W = 480;
+export const VIEW_H = 270;
 export const TILE = 16;
 export const TIER_H = 32; // world-z pixels per height tier
 export const WALL_TIER = 9;

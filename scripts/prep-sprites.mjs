@@ -1,50 +1,48 @@
-// Trim transparent borders and downscale keyed sprites to in-game size
-// (nearest-neighbor to keep pixels crisp). Outputs to public/sprites/.
+// Trim + downscale keyed sprites to in-game size → public/sprites/.
+// p2_* sources are the painterly (Diablo-style) set at the 480×270 camera
+// scale; entities not yet repainted use their old sources, scaled up ~30%
+// to keep proportions consistent until their painterly pass lands.
 
 import sharp from 'sharp';
 import { mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 
 const JOBS = [
-  { src: 'player_s', h: 26 },
-  { src: 'player_n', h: 26 },
-  { src: 'player_e', h: 26 },
-  { src: 'player_w', h: 26 },
-  { src: 'rabble_s', h: 24 },
-  { src: 'watchman_s', h: 26 },
-  { src: 'hound_s', h: 16 },
-  { src: 'brute_s', h: 42 },
-  { src: 'priest_s', h: 27 },
-  { src: 'husk_s', h: 26 },
-  { src: 'chorister_s', h: 22 },
-  { src: 'mother_s', h: 58 },
-  { src: 'mother2_s', h: 58 },
-  { src: 'grist_s', h: 40 },
-  { src: 'player_s_b', h: 26 },
-  { src: 'player_n_b', h: 26 },
-  { src: 'player_e_b', h: 26 },
-  { src: 'player_w_b', h: 26 },
-  { src: 'cassar_s', h: 27 },
-  { src: 'maud_s', h: 20 },
-  { src: 'verne_s', h: 30 },
-  { src: 'sissel_s', h: 18 },
-  { src: 'broker_s', h: 24 },
-  { src: 'dunhill_s', h: 26 },
-  { src: 'player_s_c', h: 26 }, { src: 'player_n_c', h: 26 },
-  { src: 'player_e_c', h: 26 }, { src: 'player_w_c', h: 26 },
-  { src: 'atk_s_a', h: 27 }, { src: 'atk_s_b', h: 27 },
-  { src: 'atk_n_a', h: 27 }, { src: 'atk_n_b', h: 27 },
-  { src: 'atk_e_a', h: 27 }, { src: 'atk_e_b', h: 27 },
-  { src: 'atk_w_a', h: 27 }, { src: 'atk_w_b', h: 27 },
+  // painterly player set
+  ...['player_s', 'player_n', 'player_e', 'player_w',
+      'player_s_b', 'player_n_b', 'player_e_b', 'player_w_b',
+      'player_s_c', 'player_n_c', 'player_e_c', 'player_w_c'].map((n) => ({ src: `p2_${n}`, out: n, h: 34 })),
+  ...['atk_s_a', 'atk_s_b', 'atk_n_a', 'atk_n_b',
+      'atk_e_a', 'atk_e_b', 'atk_w_a', 'atk_w_b'].map((n) => ({ src: `p2_${n}`, out: n, h: 35 })),
+  // painterly core enemies
+  { src: 'p2_rabble_s', out: 'rabble_s', h: 31 },
+  { src: 'p2_hound_s', out: 'hound_s', h: 22 },
+  { src: 'p2_watchman_s', out: 'watchman_s', h: 34 },
+  { src: 'p2_husk_s', out: 'husk_s', h: 34 },
+  { src: 'p2_chorister_s', out: 'chorister_s', h: 28 },
+  { src: 'p2_priest_s', out: 'priest_s', h: 35 },
+  // not yet repainted — old sources, scaled for the closer camera
+  { src: 'brute_s', out: 'brute_s', h: 54 },
+  { src: 'grist_s', out: 'grist_s', h: 52 },
+  { src: 'mother_s', out: 'mother_s', h: 74 },
+  { src: 'mother2_s', out: 'mother2_s', h: 74 },
+  { src: 'cassar_s', out: 'cassar_s', h: 35 },
+  { src: 'maud_s', out: 'maud_s', h: 26 },
+  { src: 'verne_s', out: 'verne_s', h: 38 },
+  { src: 'sissel_s', out: 'sissel_s', h: 23 },
+  { src: 'broker_s', out: 'broker_s', h: 31 },
+  { src: 'dunhill_s', out: 'dunhill_s', h: 33 },
 ];
 
 await mkdir('public/sprites', { recursive: true });
 for (const j of JOBS) {
-  const out = `public/sprites/${j.src}.png`;
-  await sharp(`assets/sprites/${j.src}.png`)
-    .trim()
-    .resize({ height: j.h, kernel: 'nearest' })
-    .png()
-    .toFile(out);
+  const srcPath = `assets/sprites/${j.src}.png`;
+  if (!existsSync(srcPath)) {
+    console.log('skip (missing):', j.src);
+    continue;
+  }
+  const out = `public/sprites/${j.out}.png`;
+  await sharp(srcPath).trim().resize({ height: j.h, kernel: 'lanczos3' }).png().toFile(out);
   const meta = await sharp(out).metadata();
-  console.log(j.src, '→', `${meta.width}x${meta.height}`);
+  console.log(`${j.src} → ${j.out} ${meta.width}x${meta.height}`);
 }

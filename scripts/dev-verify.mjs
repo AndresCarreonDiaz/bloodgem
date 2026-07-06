@@ -21,7 +21,7 @@ const check = (name, ok, detail = '') => {
 };
 
 const box = await page.locator('#game').boundingBox();
-const toPage = (s) => [box.x + (s.x / 640) * box.width, box.y + (s.y / 360) * box.height];
+const toPage = (s) => [box.x + (s.x / 480) * box.width, box.y + (s.y / 270) * box.height];
 const clickAt = async (s, btn = 'left') => {
   const [px, py] = toPage(s);
   await page.mouse.move(px, py);
