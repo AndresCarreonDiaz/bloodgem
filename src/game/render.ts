@@ -22,6 +22,25 @@ interface Drawable { key: number; draw: DrawFn }
 const WALL_VISUAL_H = TIER_H * 2 + 8;
 
 let lightCanvas: HTMLCanvasElement | null = null;
+let glowCanvas: HTMLCanvasElement | null = null;
+let grainCanvas: HTMLCanvasElement | null = null;
+
+// pre-baked noise tile for film grain (REPLACED-style cinematic texture)
+function grain(): HTMLCanvasElement {
+  if (grainCanvas) return grainCanvas;
+  grainCanvas = document.createElement('canvas');
+  grainCanvas.width = 160;
+  grainCanvas.height = 160;
+  const g = grainCanvas.getContext('2d')!;
+  const img = g.createImageData(160, 160);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = 118 + Math.random() * 20;
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+    img.data[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  return grainCanvas;
+}
 
 // Painted-world mode: elevation is baked into the backdrop art, so a standing
 // entity draws at its position — only height ABOVE local ground (falls, shots,
@@ -74,6 +93,7 @@ function drawGodrays(ctx: CanvasRenderingContext2D, game: Game, time: number) {
   const rays = GODRAYS[game.lvl.name];
   if (!rays) return;
   ctx.globalCompositeOperation = 'lighter';
+  ctx.filter = 'blur(3px)';
   for (const r of rays) {
     const osc = 1 + 0.12 * Math.sin(time / 6 + r.x);
     const w = r.w * osc;
@@ -91,6 +111,7 @@ function drawGodrays(ctx: CanvasRenderingContext2D, game: Game, time: number) {
     ctx.closePath();
     ctx.fill();
   }
+  ctx.filter = 'none';
   ctx.globalCompositeOperation = 'source-over';
 }
 
@@ -111,6 +132,17 @@ function drawGrade(ctx: CanvasRenderingContext2D, game: Game) {
   v.addColorStop(1, 'rgba(200,200,210,1)');
   ctx.fillStyle = v;
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+
+  // film grain — animated offset, barely-there (the REPLACED texture)
+  ctx.globalCompositeOperation = 'overlay';
+  ctx.globalAlpha = 0.16;
+  const gr = grain();
+  const ox = (Math.random() * 160) | 0;
+  const oy = (Math.random() * 160) | 0;
+  for (let gy = -oy; gy < VIEW_H; gy += 160)
+    for (let gx = -ox; gx < VIEW_W; gx += 160)
+      ctx.drawImage(gr, gx, gy);
+  ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
 }
 
@@ -1215,17 +1247,31 @@ function drawLighting(ctx: CanvasRenderingContext2D, game: Game, time: number) {
 
   ctx.drawImage(lightCanvas, 0, 0);
 
-  // warm additive glow pass — gaslight is amber, gem-light is red
-  ctx.globalCompositeOperation = 'lighter';
+  // warm additive glow pass — drawn offscreen, then BLOOMED onto the scene
+  if (!glowCanvas) {
+    glowCanvas = document.createElement('canvas');
+    glowCanvas.width = VIEW_W;
+    glowCanvas.height = VIEW_H;
+  }
+  const gctx = glowCanvas.getContext('2d')!;
+  gctx.globalCompositeOperation = 'source-over';
+  gctx.clearRect(0, 0, VIEW_W, VIEW_H);
+  gctx.globalCompositeOperation = 'lighter';
   const glow = (wx: number, wy: number, r: number, color: string) => {
     const s = game.camera.toScreen(wx, wy);
     if (s.x < -r || s.x > VIEW_W + r || s.y < -r || s.y > VIEW_H + r) return;
-    const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r);
+    const g = gctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r);
     g.addColorStop(0, color);
     g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(s.x - r, s.y - r, r * 2, r * 2);
+    gctx.fillStyle = g;
+    gctx.fillRect(s.x - r, s.y - r, r * 2, r * 2);
   };
+  // characters sit in pools of light — grounds them in the world
+  const p2 = game.player;
+  if (!p2.dead) glow(p2.pos.x, p2.pos.y + 2, 26, 'rgba(190, 170, 140, 0.10)');
+  if (game.brute?.alive && game.brute.active) glow(game.brute.pos.x, game.brute.pos.y, 34, 'rgba(212, 60, 60, 0.10)');
+  if (game.mother?.alive && game.mother.active) glow(game.mother.pos.x, game.mother.pos.y, 44, 'rgba(212, 49, 72, 0.14)');
+  if (game.cassar?.alive && game.cassar.active) glow(game.cassar.pos.x, game.cassar.pos.y, 28, 'rgba(200, 190, 160, 0.10)');
   const ember = game.lvl.name === 'ember';
   for (const lamp of game.lvl.lamps) {
     const fl = 1 + 0.08 * Math.sin(time * 13 + lamp.x);
@@ -1236,5 +1282,13 @@ function drawLighting(ctx: CanvasRenderingContext2D, game: Game, time: number) {
     if (pr.type === 'crystal') glow(pr.x, pr.y - 8, 48, 'rgba(212, 49, 72, 0.10)');
   }
   if (game.heartseam) glow(game.heartseam.x, game.heartseam.y - 10, 90, 'rgba(240, 80, 100, 0.14)');
+
+  // composite: sharp glows + a blurred double-draw = real bloom
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.drawImage(glowCanvas, 0, 0);
+  ctx.filter = 'blur(5px)';
+  ctx.drawImage(glowCanvas, 0, 0);
+  ctx.drawImage(glowCanvas, 0, 0);
+  ctx.filter = 'none';
   ctx.globalCompositeOperation = 'source-over';
 }
